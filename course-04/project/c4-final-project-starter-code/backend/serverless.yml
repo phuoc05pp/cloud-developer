@@ -86,6 +86,7 @@ functions:
       - http:
           method: patch
           path: todos/{todoId}
+          cors: true
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -98,6 +99,7 @@ functions:
       - http:
           method: delete
           path: todos/{todoId}
+          cors: true
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -110,6 +112,7 @@ functions:
       - http:
           method: post
           path: todos/{todoId}/attachment
+          cors: true
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -118,7 +121,6 @@ functions:
           - '*'
         Resource: !GetAtt AttachmentsBucket.Arn
 
-
 resources:
   Resources:
     GatewayResponseDefault4XX:
@@ -126,9 +128,8 @@ resources:
       Properties:
         ResponseType: 'DEFAULT_4XX'
         StatusCode: '400'
-        RestApiId: 
-          Ref: ApiGatewayRestApi
-
+        RestApiId: !Ref ApiGatewayRestApi
+    
     TodosTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -154,7 +155,7 @@ resources:
               - AttributeName: createdAt
                 KeyType: RANGE
             Projection:
-              ProjectionType: ALL # What attributes will be copied to an index
+              ProjectionType: ALL
 
     AttachmentsBucket:
       Type: AWS::S3::Bucket
