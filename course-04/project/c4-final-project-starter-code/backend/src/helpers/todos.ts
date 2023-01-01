@@ -24,6 +24,14 @@ const s3 = new AWS.S3({
     return todoAccess.getAllTodos(userId);
   }
   
+  export async function updateTodo(todoId: string, userId: string, updateTodoRequest: UpdateTodoRequest): Promise<TodoUpdate> {
+    return await todoAccess.updateTodo(todoId, userId, {
+      name: updateTodoRequest.name,
+      dueDate: updateTodoRequest.dueDate,
+      done: updateTodoRequest.done
+    })
+  }
+  
   export async function createTodo(userId: string, createTodoRequest: CreateTodoRequest): Promise<TodoItem> {
   
     const itemId = uuid.v4()
@@ -37,12 +45,14 @@ const s3 = new AWS.S3({
       done: false
     })
   }
-  
-  export async function updateTodo(todoId: string, userId: string, updateTodoRequest: UpdateTodoRequest): Promise<TodoUpdate> {
-    return await todoAccess.updateTodo(todoId, userId, {
-      name: updateTodoRequest.name,
-      dueDate: updateTodoRequest.dueDate,
-      done: updateTodoRequest.done
+
+  function getUploadUrl(imageId: string) {
+    logger.info('get upload url')
+    logger.info('urlExpiration:', urlExpiration)
+    return s3.getSignedUrl('putObject', {
+      Bucket: bucketName,
+      Key: imageId,
+      Expires: Number(urlExpiration)
     })
   }
   
@@ -56,15 +66,5 @@ const s3 = new AWS.S3({
     const url = `https://${bucketName}.s3.amazonaws.com/${imageId}`
     await attachmentUtils.updateAttachmentUrl(todoId, userId, url)
     return getUploadUrl(imageId)
-  }
-  
-  function getUploadUrl(imageId: string) {
-    logger.info('get upload url')
-    logger.info('urlExpiration:', urlExpiration)
-    return s3.getSignedUrl('putObject', {
-      Bucket: bucketName,
-      Key: imageId,
-      Expires: Number(urlExpiration)
-    })
   }
 
