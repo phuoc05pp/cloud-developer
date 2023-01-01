@@ -1,10 +1,10 @@
 import { TodosAccess } from './todosAcess'
 import { AttachmentUtils } from './attachmentUtils';
 import { TodoItem } from '../models/TodoItem'
+import { TodoUpdate } from '../models/TodoUpdate'
 import { CreateTodoRequest } from '../requests/CreateTodoRequest'
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 import { createLogger } from '../utils/logger'
-import { TodoUpdate } from '../models/TodoUpdate'
 import * as uuid from 'uuid'
 import * as AWS from 'aws-sdk'
 
@@ -24,14 +24,6 @@ const s3 = new AWS.S3({
     return todoAccess.getAllTodos(userId);
   }
   
-  export async function updateTodo(todoId: string, userId: string, updateTodoRequest: UpdateTodoRequest): Promise<TodoUpdate> {
-    return await todoAccess.updateTodo(todoId, userId, {
-      name: updateTodoRequest.name,
-      dueDate: updateTodoRequest.dueDate,
-      done: updateTodoRequest.done
-    })
-  }
-  
   export async function createTodo(userId: string, createTodoRequest: CreateTodoRequest): Promise<TodoItem> {
   
     const itemId = uuid.v4()
@@ -45,14 +37,12 @@ const s3 = new AWS.S3({
       done: false
     })
   }
-
-  function getUploadUrl(imageId: string) {
-    logger.info('get upload url')
-    logger.info('urlExpiration:', urlExpiration)
-    return s3.getSignedUrl('putObject', {
-      Bucket: bucketName,
-      Key: imageId,
-      Expires: Number(urlExpiration)
+  
+  export async function updateTodo(todoId: string, userId: string, updateTodoRequest: UpdateTodoRequest): Promise<TodoUpdate> {
+    return await todoAccess.updateTodo(todoId, userId, {
+      name: updateTodoRequest.name,
+      dueDate: updateTodoRequest.dueDate,
+      done: updateTodoRequest.done
     })
   }
   
@@ -67,4 +57,13 @@ const s3 = new AWS.S3({
     await attachmentUtils.updateAttachmentUrl(todoId, userId, url)
     return getUploadUrl(imageId)
   }
-
+  
+  function getUploadUrl(imageId: string) {
+    logger.info('get upload url')
+    logger.info('urlExpiration:', urlExpiration)
+    return s3.getSignedUrl('putObject', {
+      Bucket: bucketName,
+      Key: imageId,
+      Expires: Number(urlExpiration)
+    })
+  }
