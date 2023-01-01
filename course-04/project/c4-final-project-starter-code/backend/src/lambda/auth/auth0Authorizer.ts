@@ -51,11 +51,28 @@ export const handler = async (
   }
 }
 
+async function verifyToken(authHeader: string): Promise<JwtPayload> {
+  const token = getToken(authHeader)
+  const jwt: Jwt = decode(token, { complete: true }) as Jwt
+
+  let res = await Axios.get(jwksUrl, {
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': "*",
+      'Access-Control-Allow-Credentials': true,
+    }
+  });
+  let key = await getSigningKey(res.data.keys, jwt.header.kid);
+
+  return verify(token, key.publicKey, { algorithms: ['RS256'] }) as JwtPayload
+}
+
 const getSigningKey = async (keys, kid) => {
-  const signingKeys = keys.filter(key => key.use === 'sig'
-      && key.kty === 'RSA' 
-      && key.kid          
-      && key.x5c && key.x5c.length 
+  const signingKeys = keys.filter(key => key.use === 'sig' // JWK property `use` determines the JWK is for signing
+      && key.kty === 'RSA' // We are only supporting RSA
+      && key.kid           // The `kid` must be present to be useful for later
+      && key.x5c && key.x5c.length // Has useful public keys (we aren't using n or e)
     ).map(key => {
       return { kid: key.kid, nbf: key.nbf, publicKey: certToPEM(key.x5c[0]) };
     });
@@ -74,22 +91,6 @@ const certToPEM = (cert) => {
   cert = cert.match(/.{1,64}/g).join('\n');
   cert = `-----BEGIN CERTIFICATE-----\n${cert}\n-----END CERTIFICATE-----\n`;
   return cert;
-}
-
-async function verifyToken(authHeader: string): Promise<JwtPayload> {
-  const token = getToken(authHeader)
-  const jwt: Jwt = decode(token, { complete: true }) as Jwt
-  let res = await Axios.get(jwksUrl, {
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': "*",
-      'Access-Control-Allow-Credentials': true,
-    }
-  });
-  let key = await getSigningKey(res.data.keys, jwt.header.kid);
-
-  return verify(token, key.publicKey, { algorithms: ['RS256'] }) as JwtPayload
 }
 
 function getToken(authHeader: string): string {

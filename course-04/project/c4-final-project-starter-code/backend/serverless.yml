@@ -57,7 +57,10 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:Query
-        Resource: !GetAtt TodosTable.Arn
+        Resource: [
+          "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}",
+          "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/*"
+        ]
 
   CreateTodo:
     handler: src/lambda/http/createTodo.handler
@@ -86,6 +89,7 @@ functions:
       - http:
           method: patch
           path: todos/{todoId}
+          cors: true
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -98,6 +102,7 @@ functions:
       - http:
           method: delete
           path: todos/{todoId}
+          cors: true
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -110,6 +115,7 @@ functions:
       - http:
           method: post
           path: todos/{todoId}/attachment
+          cors: true
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -117,7 +123,10 @@ functions:
           - s3:GetObject
           - '*'
         Resource: !GetAtt AttachmentsBucket.Arn
-
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+        Resource: !GetAtt TodosTable.Arn
 
 resources:
   Resources:
@@ -126,9 +135,8 @@ resources:
       Properties:
         ResponseType: 'DEFAULT_4XX'
         StatusCode: '400'
-        RestApiId: 
-          Ref: ApiGatewayRestApi
-
+        RestApiId: !Ref ApiGatewayRestApi
+    
     TodosTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -154,7 +162,7 @@ resources:
               - AttributeName: createdAt
                 KeyType: RANGE
             Projection:
-              ProjectionType: ALL # What attributes will be copied to an index
+              ProjectionType: ALL
 
     AttachmentsBucket:
       Type: AWS::S3::Bucket
