@@ -20,6 +20,11 @@ const s3 = new AWS.S3({
   
   const todoAccess = new TodosAccess();
   const attachmentUtils = new AttachmentUtils();
+
+  export async function searchTodo(userId: string, keyword: string): Promise<TodoItem[]> {
+    return todoAccess.searchTodos(userId, keyword);
+}
+
   export async function getAllTodos(userId: string): Promise<TodoItem[]> {
     return todoAccess.getAllTodos(userId);
   }

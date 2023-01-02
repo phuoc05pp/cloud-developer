@@ -51,6 +51,20 @@ functions:
 
   Auth:
     handler: src/lambda/auth/auth0Authorizer.handler
+  
+  SearchNotes:
+    handler: src/lambda/http/searchTodos.handler
+    events:
+      - http:
+          method: post
+          path: search/todos
+          cors: true
+          authorizer: Auth
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: !GetAtt TodosTable.Arn
 
   GetTodos:
     handler: src/lambda/http/getTodos.handler

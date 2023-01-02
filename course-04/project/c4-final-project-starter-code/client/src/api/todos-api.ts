@@ -3,6 +3,23 @@ import { Todo } from '../types/Todo';
 import { CreateTodoRequest } from '../types/CreateTodoRequest';
 import Axios from 'axios'
 import { UpdateTodoRequest } from '../types/UpdateTodoRequest';
+import { SearchTodoRequest } from '../types/SearchTodoRequest';
+
+export async function searchTodos(
+  idToken: string,
+  searchReq: SearchTodoRequest
+): Promise<Todo[]> {
+  console.log('Search notes ', searchReq)
+
+  const response = await Axios.post(`${apiEndpoint}/search/todos`, JSON.stringify(searchReq), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${idToken}`
+    },
+  })
+  console.log('Posts:', response.data)
+  return response.data.items
+}
 
 export async function getTodos(idToken: string): Promise<Todo[]> {
   console.log('Fetching todos')

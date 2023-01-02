@@ -84,6 +84,24 @@ export class TodosAccess {
     }).promise()
   }
 
+  async searchTodos(userId: string, keyword: string): Promise<TodoItem[]> {
+    console.log('search all Posts for user ', userId, ' with keyword ', keyword)
+
+    const result = await this.docClient.query({
+      TableName: this.todosTable,
+      KeyConditionExpression: '#userId =:i',
+      ExpressionAttributeNames: {
+        '#userId': 'userId'
+      },
+      ExpressionAttributeValues: {
+        ':i': userId
+      }
+    }).promise();
+
+    let items = result.Items as TodoItem[]
+    items = items.filter(item => item.name.includes(keyword))
+    return items
+  }
 }
 
 function createDynamoDBClient() {
