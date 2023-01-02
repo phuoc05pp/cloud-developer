@@ -30,15 +30,6 @@ provider:
     # Enable API Gateway logs
     restApi: true
 
-  iam:
-    role:
-      statements:
-        - Effect: Allow
-          Action:
-            - xray:PutTelemetryRecords
-            - xray:PutTraceSegments
-          Resource: "*"
-
 
 functions:
 
@@ -61,6 +52,10 @@ functions:
           "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}",
           "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/*"
         ]
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+        Resource: "*"
 
   CreateTodo:
     handler: src/lambda/http/createTodo.handler
@@ -81,6 +76,7 @@ functions:
       - Effect: Allow
         Action:
           - ses:VerifyEmailIdentity
+          - xray:PutTraceSegments
         Resource: '*'
 
   UpdateTodo:
@@ -95,6 +91,10 @@ functions:
         Action:
           - dynamodb:UpdateItem
         Resource: !GetAtt TodosTable.Arn
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+        Resource: "*"
 
   DeleteTodo:
     handler: src/lambda/http/deleteTodo.handler
@@ -108,6 +108,10 @@ functions:
         Action:
           - dynamodb:DeleteItem
         Resource: !GetAtt TodosTable.Arn
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+        Resource: "*"
 
   GenerateUploadUrl:
     handler: src/lambda/http/generateUploadUrl.handler
@@ -127,6 +131,10 @@ functions:
         Action:
           - dynamodb:UpdateItem
         Resource: !GetAtt TodosTable.Arn
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+        Resource: "*"
 
 resources:
   Resources:
