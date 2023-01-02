@@ -14,9 +14,10 @@ import {
   Loader
 } from 'semantic-ui-react'
 
-import { createTodo, deleteTodo, getTodos, patchTodo } from '../api/todos-api'
+import { createTodo, deleteTodo, getTodos, patchTodo, searchTodos } from '../api/todos-api'
 import Auth from '../auth/Auth'
 import { Todo } from '../types/Todo'
+import { SearchTodoRequest } from '../types/SearchTodoRequest'
 
 interface TodosProps {
   auth: Auth
@@ -27,17 +28,23 @@ interface TodosState {
   todos: Todo[]
   newTodoName: string
   loadingTodos: boolean
+  searchTodo: string
 }
 
 export class Todos extends React.PureComponent<TodosProps, TodosState> {
   state: TodosState = {
     todos: [],
     newTodoName: '',
-    loadingTodos: true
+    loadingTodos: true,
+    searchTodo: ''
   }
 
   handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({ newTodoName: event.target.value })
+  }
+
+  handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({ searchTodo: event.target.value })
   }
 
   onEditButtonClick = (todoId: string) => {
@@ -57,6 +64,31 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
       })
     } catch {
       alert('Todo creation failed')
+    }
+  }
+
+  onTodoSearch = async (event: React.ChangeEvent<HTMLButtonElement>) => {
+    try {
+      const searchTodo = this.state.searchTodo
+      console.log('Search todo with keyword: ', searchTodo)
+
+      if (searchTodo) {
+        console.log('Enter search todo')
+        const searchReq:SearchTodoRequest = {keyword: searchTodo}
+
+        const todos = await searchTodos(this.props.auth.getIdToken(), searchReq)
+        this.setState({
+          todos,
+          loadingTodos: false
+        })
+      } else {
+        console.log('Empty search. Enter fetch todo')
+        this.componentDidMount()
+      }
+    } catch (e) {
+      if (e instanceof Error) {
+        alert(`Failed to fetch todos: ${e.message}`)
+      }
     }
   }
 
@@ -108,10 +140,37 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
       <div>
         <Header as="h1">TODOs</Header>
 
+        {this.renderTodoSearch()}
+
         {this.renderCreateTodoInput()}
 
         {this.renderTodos()}
       </div>
+    )
+  }
+
+  renderTodoSearch() {
+    return (
+      <Grid.Row>
+        <Grid.Column width={16}>
+          <Input
+            action={{
+              color: 'teal',
+              labelPosition: 'left',
+              icon: 'search',
+              content: 'Search todo name',
+              onClick: this.onTodoSearch
+            }}
+            fluid
+            actionPosition="left"
+            placeholder="Search your note here..."
+            onChange={this.handleSearch}
+          />
+        </Grid.Column>
+        <Grid.Column width={16}>
+          <Divider />
+        </Grid.Column>
+      </Grid.Row>
     )
   }
 
